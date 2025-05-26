@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from "../../ui/select";
 import { Button } from "../../ui/button";
+import axiosInstance from "../../utils/common.utils";
 
 export function AddUserForm() {
   const [formData, setFormData] = useState({
@@ -32,8 +33,8 @@ export function AddUserForm() {
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (formData.name.length < 20 || formData.name.length > 60) {
-      newErrors.name = "Name must be between 20 and 60 characters";
+    if (formData.name.length < 5 || formData.name.length > 60) {
+      newErrors.name = "Name must be between 5 and 60 characters";
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -69,6 +70,8 @@ export function AddUserForm() {
     setIsLoading(true);
 
     try {
+
+      const response = axiosInstance.post("/api/user/create-user", formData);
       // In a real app, this would call an API
       toast({
         title: "User added successfully",
@@ -156,9 +159,9 @@ export function AddUserForm() {
             <SelectValue placeholder="Select a role" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="user">Normal User</SelectItem>
-            <SelectItem value="admin">System Administrator</SelectItem>
-            <SelectItem value="owner">Store Owner</SelectItem>
+            <SelectItem value="NORMAL_USER">Normal User</SelectItem>
+            <SelectItem value="ADMIN">System Administrator</SelectItem>
+            <SelectItem value="STORE_OWNER">Store Owner</SelectItem>
           </SelectContent>
         </Select>
         {errors.role && <p className="text-sm text-red-600">{errors.role}</p>}

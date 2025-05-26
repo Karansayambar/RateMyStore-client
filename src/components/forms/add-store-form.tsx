@@ -5,6 +5,7 @@ import { Input } from "../../ui/input";
 import { Textarea } from "../../ui/textarea";
 import { Button } from "../../ui/button";
 import { useData } from "../../contexts/data-context";
+import axiosInstance from "../../utils/common.utils";
 
 export function AddStoreForm() {
   const [formData, setFormData] = useState({
@@ -12,6 +13,7 @@ export function AddStoreForm() {
     email: "",
     address: "",
     ownerId: "",
+    role: "ADMIN", // Default role for store owners
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
@@ -21,7 +23,7 @@ export function AddStoreForm() {
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (formData.name.length < 20 || formData.name.length > 60) {
+    if (formData.name.length < 5 || formData.name.length > 60) {
       newErrors.name = "Store name must be between 20 and 60 characters";
     }
 
@@ -52,12 +54,15 @@ export function AddStoreForm() {
     setIsLoading(true);
 
     try {
-      addStore(formData);
+      formData.role = "ADMIN"
+      // addStore(formData);
+      axiosInstance.post("/api/store/create-store", formData);
+
       toast({
         title: "Store added successfully",
         description: `${formData.name} has been registered on the platform`,
       });
-      setFormData({ name: "", email: "", address: "", ownerId: "" });
+      // setFormData({ name: "", email: "", address: "", ownerId: "" });
     } catch (error) {
       toast({
         title: "Error",
