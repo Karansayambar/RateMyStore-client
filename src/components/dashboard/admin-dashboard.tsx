@@ -1,10 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { LogOut, Users, Store, Star } from "lucide-react";
 import { useAuth } from "../../contexts/auth-context";
-import { useData } from "../../contexts/data-context";
 import { Button } from "../../ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../ui/tabs";
 import {
@@ -18,16 +17,36 @@ import { AddStoreForm } from "../forms/add-store-form";
 import { AddUserForm } from "../forms/add-user-form";
 import { StoresList } from "../commen/stores-list";
 import { UsersList } from "../commen/users-list";
-
+import axiosInstance from "../../utils/common.utils";
 export function AdminDashboard() {
   const { user, logout } = useAuth();
-  const { stores, ratings } = useData();
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [commonData, setCommonData] = useState({
+    totalUsers: 0,
+    totalStores: 0,
+    totalRatings: 0,
+  });
+
+  useEffect(() => {
+    axiosInstance
+      .get("/api/store/common-length")
+      .then((response) => {
+        // Assuming response.data contains the ratings
+        // You can update your state or context with the fetched ratings if needed
+        console.log("Fetched ratings:", response.data);
+        setCommonData({
+          totalUsers: response.data.userCount,
+          totalStores: response.data.storeCount,
+          totalRatings: response.data.ratingCount,
+        });
+      })
+      .catch((error) => {
+        console.error("Error fetching ratings:", error);
+      });
+  }, []);
 
   // Mock data for total users (including the dummy users)
-  const totalUsers = 4; // This would come from your user management system
-  const totalStores = stores.length;
-  const totalRatings = ratings.length;
+
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -69,10 +88,10 @@ export function AdminDashboard() {
                   <CardTitle className="text-sm font-medium">
                     Total Users
                   </CardTitle>
-                  <Users className="h-4 w-4 text-muted-foreground" />
+                  <Users  className="h-4 w-4 text-muted-foreground"/>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{totalUsers}</div>
+                  <div className="text-2xl font-bold">{commonData.totalUsers}</div>
                   <p className="text-xs text-muted-foreground">
                     Registered users on platform
                   </p>
@@ -86,7 +105,7 @@ export function AdminDashboard() {
                   <Store className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{totalStores}</div>
+                  <div className="text-2xl font-bold">{commonData.totalStores}</div>
                   <p className="text-xs text-muted-foreground">
                     Registered stores
                   </p>
@@ -100,7 +119,7 @@ export function AdminDashboard() {
                   <Star className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{totalRatings}</div>
+                  <div className="text-2xl font-bold">{commonData.totalRatings}</div>
                   <p className="text-xs text-muted-foreground">
                     Submitted ratings
                   </p>

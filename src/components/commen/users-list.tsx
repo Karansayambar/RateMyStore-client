@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 
 import { ArrowUpDown, Search } from "lucide-react";
 import { Input } from "../../ui/input";
@@ -21,9 +21,11 @@ import {
 } from "../../ui/table";
 import { Button } from "../../ui/button";
 import { Badge } from "../../ui/badge";
+import axiosInstance from "../../utils/common.utils";
+import { se } from "date-fns/locale";
 
 // Mock users data for admin view
-const mockUsers = [
+const mockUsers1 = [
   {
     id: "1",
     name: "System Administrator User",
@@ -56,25 +58,47 @@ const mockUsers = [
 
 export function UsersList() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [mockUsers, setMockUsers] = useState([]);
+  const [initialUsers, setInitialUsers] = useState([]);
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [sortField, setSortField] = useState<
     "name" | "email" | "address" | "role"
   >("name");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
-  const filteredAndSortedUsers = useMemo(() => {
-    const filtered = mockUsers.filter((user) => {
+  useEffect(() => {
+    // Fetch users from the API
+    const fetchUsers = async () => {
+      try {
+        const response = await axiosInstance.get("/api/user/all-users");
+        console.log("Fetched users:", response.data);
+        setMockUsers(response.data.users);
+        setInitialUsers(response.data.users);
+      } catch (error) {
+        console.error("Error fetching users:", error);
+      }
+    };
+
+    fetchUsers();
+  },[]);
+
+  const filteredAndSortedUsers = () => {
+    const filtered = initialUsers.filter((user: any) => {
       const matchesSearch =
         user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user.address.toLowerCase().includes(searchTerm.toLowerCase());
 
       const matchesRole = roleFilter === "all" || user.role === roleFilter;
+      console.log(
+        `User: ${user.name}, Matches Search: ${matchesSearch}, Matches Role: ${matchesRole}`)
 
       return matchesSearch && matchesRole;
     });
 
-    filtered.sort((a, b) => {
+    console.log("Filtered users:", filtered);
+
+    filtered.sort((a: any, b: any) => {
       let aValue: string;
       let bValue: string;
 
@@ -86,7 +110,15 @@ export function UsersList() {
       return 0;
     });
 
+
     return filtered;
+  };
+
+  useEffect(() => {
+    // Update mockUsers with filtered and sorted users
+    const updatedUsers = filteredAndSortedUsers();
+    console.log("Updated mockUsers:", roleFilter);
+    setMockUsers(updatedUsers);
   }, [searchTerm, roleFilter, sortField, sortDirection]);
 
   const handleSort = (field: typeof sortField) => {
@@ -100,9 +132,9 @@ export function UsersList() {
 
   const getRoleBadgeVariant = (role: string) => {
     switch (role) {
-      case "admin":
+      case "ADMIN":
         return "destructive";
-      case "owner":
+      case "STORE_OWNER":
         return "default";
       default:
         return "secondary";
@@ -127,9 +159,9 @@ export function UsersList() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Roles</SelectItem>
-            <SelectItem value="admin">Admin</SelectItem>
-            <SelectItem value="user">User</SelectItem>
-            <SelectItem value="owner">Store Owner</SelectItem>
+            <SelectItem value="ADMIN">Admin</SelectItem>
+            <SelectItem value="NORMAL_USER">User</SelectItem>
+            <SelectItem value="STORE_OWNER">Store Owner</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -181,16 +213,16 @@ export function UsersList() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredAndSortedUsers.map((user) => (
+            {mockUsers?.map((user: any) => (
               <TableRow key={user.id}>
                 <TableCell className="font-medium">{user.name}</TableCell>
                 <TableCell>{user.email}</TableCell>
                 <TableCell>{user.address}</TableCell>
                 <TableCell>
                   <Badge variant={getRoleBadgeVariant(user.role)}>
-                    {user.role === "admin"
+                    {user.role === "ADMIN"
                       ? "Administrator"
-                      : user.role === "owner"
+                      : user.role === "STORE_OWNER"
                       ? "Store Owner"
                       : "User"}
                   </Badge>

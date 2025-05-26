@@ -14,11 +14,11 @@ function App() {
   }
 
   switch (user.role) {
-    case "admin":
+    case "ADMIN":
       return <AdminDashboard />;
-    case "user":
+    case "USER":
       return <UserDashboard />;
-    case "owner":
+    case "OWNER":
       return <OwnerDashboard />;
     default:
       return <LoginForm />;

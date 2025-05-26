@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 
 import { ArrowUpDown, Search } from "lucide-react";
 import { useData } from "../../contexts/data-context";
@@ -15,24 +15,43 @@ import {
 } from "../../ui/table";
 import { Button } from "../../ui/button";
 import { Badge } from "../../ui/badge";
+import axiosInstance from "../../utils/common.utils";
 
 export function StoresList() {
-  const { stores } = useData();
+  // const { stores } = useData();
   const [searchTerm, setSearchTerm] = useState("");
+  const [mockStores, setMockStores] = useState([]);
+  const [initialStores, setInitialStores] = useState([]);
   const [sortField, setSortField] = useState<
     "name" | "email" | "address" | "rating"
   >("name");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
-  const filteredAndSortedStores = useMemo(() => {
-    const filtered = stores.filter(
-      (store) =>
+  useEffect(() => {
+    // Fetch users from the API
+    const fetchUsers = async () => {
+      try {
+        const response = await axiosInstance.get("/api/store/");
+        console.log("Fetched stores:", response.data);
+        setMockStores(response.data.stores);
+        setInitialStores(response.data.stores);
+      } catch (error) {
+        console.error("Error fetching users:", error);
+      }
+    };
+
+    fetchUsers();
+  }, []);
+
+  const filteredAndSortedStores = () => {
+    const filtered = initialStores.filter(
+      (store: any) =>
         store.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         store.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
         store.address.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    filtered.sort((a, b) => {
+    filtered.sort((a: any, b: any) => {
       let aValue: string | number;
       let bValue: string | number;
 
@@ -52,7 +71,13 @@ export function StoresList() {
     });
 
     return filtered;
-  }, [stores, searchTerm, sortField, sortDirection]);
+  };
+
+  useEffect(() => {
+    // Update mockUsers with filtered and sorted users
+    const updatedUsers = filteredAndSortedStores();
+    setMockStores(updatedUsers);
+  }, [searchTerm, sortField, sortDirection]);
 
   const handleSort = (field: typeof sortField) => {
     if (field === sortField) {
@@ -122,15 +147,13 @@ export function StoresList() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredAndSortedStores.map((store) => (
+            {mockStores.map((store: any) => (
               <TableRow key={store.id}>
                 <TableCell className="font-medium">{store.name}</TableCell>
                 <TableCell>{store.email}</TableCell>
                 <TableCell>{store.address}</TableCell>
                 <TableCell>
-                  <Badge variant="secondary">
-                    {store.averageRating.toFixed(1)} ⭐ ({store.totalRatings})
-                  </Badge>
+                  <Badge variant="secondary">2⭐4</Badge>
                 </TableCell>
               </TableRow>
             ))}
